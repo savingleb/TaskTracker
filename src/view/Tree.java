@@ -6,8 +6,6 @@ import db.TaskEntity;
 import java.util.List;
 
 public class Tree{
-
-
     //return amount of tasks
     public int printTasks(){
         System.out.println("Task tree: ");
