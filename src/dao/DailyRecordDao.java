@@ -17,7 +17,7 @@ import java.util.List;
 public class DailyRecordDao {
     private static Session session = HibernateUtil.getSessionFactory().openSession();
 
-    //singleton
+    //singletonggggggggggg
     private static DailyRecordDao instance=null;
 
     private DailyRecordDao(){}
@@ -27,8 +27,6 @@ public class DailyRecordDao {
             instance=new DailyRecordDao();
         return instance;
     }
-
-
 
     public DailyRecordEntity getRecord(Date date, TaskEntity task) {
         DailyRecordEntity result;
