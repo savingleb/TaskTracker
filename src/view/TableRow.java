@@ -1,10 +1,6 @@
 package view;
 
-import dao.DailyRecordDao;
-import dao.TaskDao;
 import db.DailyRecordEntity;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -12,10 +8,10 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class TableRow {
-    private Date date;
-    private String task;
-    private Date length;
-    private  int percentage;
+    Date date;
+    String task;
+    Date length;
+    int percentage;
 
     public TableRow(DailyRecordEntity record){
         task=record.getTask().getName();
@@ -25,8 +21,7 @@ public class TableRow {
     }
 
     private int calculatePercentage(DailyRecordEntity record){
-        List<DailyRecordEntity> records= DailyRecordDao.getInstance()
-                .getRecordsList(Restrictions.eq("rDate", record.getrDate()), Order.asc("rDate"));
+        List<DailyRecordEntity> records=new dao.DailyRecordDao().getRecordsList(record.getrDate());
         long dayTasksLength=0;
         for (DailyRecordEntity el:records){
             dayTasksLength+=el.getLength();

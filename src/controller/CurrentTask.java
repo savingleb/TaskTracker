@@ -12,12 +12,12 @@ import java.util.GregorianCalendar;
 //singleton
 public class CurrentTask {
     private static CurrentTask instance;
-    private TaskEntity task;
-    private GregorianCalendar startTime;
+    TaskEntity task;
+    GregorianCalendar startTime;
     final long TIME_ZONE_DIF=10800000;
 
     private CurrentTask(){
-        TaskDao dao=TaskDao.getInstance();
+        TaskDao dao=new TaskDao();
         task=dao.getTaskById(dao.NOT_WORK_ID);
         startTime=new GregorianCalendar();
     }
@@ -28,8 +28,8 @@ public class CurrentTask {
         return instance;
     }
 
-    public void saveTaskTime(){
-        DailyRecordDao recordDao=DailyRecordDao.getInstance();
+    void saveTaskTime(){
+        DailyRecordDao recordDao=new DailyRecordDao();
         Calendar currentTime=Calendar.getInstance();
         long length=Calendar.getInstance().getTimeInMillis() - startTime.getTimeInMillis();
         recordDao.applyRecord(length, task);
@@ -37,20 +37,15 @@ public class CurrentTask {
         startTime.setTimeInMillis(currentTime.getTimeInMillis());
     }
 
-    public void changeTask(){
+    void changeTask(){
         this.saveTaskTime();
         TaskController controller=new TaskController();
         System.out.print("Select new current task\n");
-        TaskEntity newTask=controller.selectTask();
-        TaskDao taskDao=TaskDao.getInstance();
-        if (task.getId() == taskDao.ROOT_ID || task.getId() == taskDao.NOT_WORK_ID) {
-            System.out.println("Can't rename default task");
-        }
-        task=newTask;
+        task=controller.selectTask();
         startTime=new GregorianCalendar();
     }
 
-    public void printCurrentTask(){
+    void printCurrentTask(){
         System.out.print("\nCurrent task: " + task.getName());
         SimpleDateFormat dateFormat=new SimpleDateFormat("HH:mm:ss");
         System.out.print("\nStarted: " + dateFormat.format(new Date(startTime.getTimeInMillis())));

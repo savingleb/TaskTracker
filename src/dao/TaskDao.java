@@ -1,5 +1,4 @@
 package dao;
-import org.hibernate.Query;
 import util.HibernateUtil;
 import db.TaskEntity;
 import org.hibernate.Session;
@@ -12,23 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 public class TaskDao {
-    private static Session session=HibernateUtil.getSessionFactory().openSession();
+    static Session session=HibernateUtil.getSessionFactory().openSession();
     public final int ROOT_ID=7;
     public final int NOT_WORK_ID=75;
 
-    //singleton
-    private static TaskDao instance=null;
-
-    private TaskDao(){}
-
-    public static TaskDao getInstance(){
-        if (instance==null)
-            instance=new TaskDao();
-        return instance;
-    }
-
-
-    public boolean check() { //just for debug tree
+    public boolean check() { //debug tree
         int[] checking = new int[5];
         session.beginTransaction();
         for (int i = 0; i < 5; i++) {
@@ -49,27 +36,47 @@ public class TaskDao {
 
     public List<TaskEntity> getTasks() {
         List<TaskEntity> tasks;
+        Session session = HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         tasks = (ArrayList<TaskEntity>) session.createCriteria(TaskEntity.class)
                 .addOrder(Order.asc("leftKey")).list();
         session.getTransaction().commit();
+        if (session != null)
+            session.close();
         return tasks;
     }
 
     public void addTask(int parentId, String name) {
-        session.beginTransaction();
-        Query  query= session.getNamedQuery("AddTask")
-                .setParameter("parentId", parentId)
-                .setParameter("name", name);
-        query.executeUpdate();
-        session.getTransaction().commit();
+        String url = "jdbc:oracle:thin:@localhost:1521:XE";
+        String user = "TDEV";
+        String password = "1234";
+        try {
+            Locale.setDefault(Locale.ENGLISH);
+            Connection connection = DriverManager.getConnection(url, user, password);
+            CallableStatement statement;
+            statement = connection.prepareCall("{call ADD_TASK(?,?)}");
+            statement.setInt(1,parentId);
+            statement.setString(2, name);
+            statement.executeUpdate();
+        } catch (Exception e) {
+            System.out.print(e.getLocalizedMessage());
+        }
     }
 
     public void deleteTask(int id) {
-        session.beginTransaction();
-        Query  query= session.getNamedQuery("DeleteTask").setParameter("id", id);
-        query.executeUpdate();
-        session.getTransaction().commit();
+        String url = "jdbc:oracle:thin:@localhost:1521:XE";
+        String user = "TDEV";
+        String password = "1234";
+        try {
+            Locale.setDefault(Locale.ENGLISH);
+            Connection connection = DriverManager.getConnection(url, user, password);
+            CallableStatement statement;
+            statement = connection.prepareCall("{call DELETE_TASK(?)}");
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        } catch (Exception e) {
+            System.out.print(e.getLocalizedMessage());
+        }
     }
 
     public TaskEntity getTaskById(int id){

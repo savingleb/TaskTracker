@@ -3,7 +3,10 @@ package view;
 import db.DailyRecordEntity;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import view.comparators.*;
 
 public class Table {
 
@@ -13,6 +16,14 @@ public class Table {
         for (DailyRecordEntity el : records) {
             rows.add(new TableRow(el));
         }
+    }
+
+    public void sort(Comparator<TableRow> comparator){
+        rows.sort(comparator);
+    }
+
+    public void descSort(){
+        Collections.reverse(rows);
     }
 
     public void print() {
