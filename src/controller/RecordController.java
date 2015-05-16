@@ -3,148 +3,159 @@ package controller;
 import dao.DailyRecordDao;
 import dao.TaskDao;
 import db.TaskEntity;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import view.Table;
-import view.TableRow;
-import view.comparators.DateComparator;
-import view.comparators.LengthComparator;
-import view.comparators.PercComparator;
-import view.comparators.TaskNameComparator;
 
 import java.text.ParseException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.Comparator;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class RecordController {
 
+    private Order orderByAttribute(String attribute, OrderType orderType) {
+        if (orderType == OrderType.DESC) {
+            return Order.desc(attribute);
+        }
+        return Order.asc(attribute);
+    }
+
+    private Criterion restrictContent(Date date) {
+        return Restrictions.eq("rDate", date);
+    }
+
+    private Criterion restrictContent(Date date1, Date date2) {
+        return Restrictions.between("rDate", date1, date2);
+    }
+
+    private Criterion restrictContent(TaskEntity task) {
+        return Restrictions.eq("task", task);
+    }
+
+    private Criterion restrictContent(List<TaskEntity> tasks) {
+        return Restrictions.in("task", tasks.toArray());
+    }
+
+
     public void printStatistic() {
-        System.out.print("\nSelect criterion\n");
+        System.out.println("Select criterion");
         while (true) {
-            System.out.print("\n1. Tasks\n");
-            System.out.print("2. Task and subtasks\n");
-            System.out.print("3. Date\n");
-            System.out.print("4. Date Range\n");
-            Scanner input = new Scanner(System.in);
+            System.out.println("1. Tasks");
+            System.out.println("2. Task and subtasks");
+            System.out.println("3. Date");
+            System.out.println("4. Date Range");
             int select;
-            try {
+            Scanner input = new Scanner(System.in);
+            if (input.hasNextInt())
                 select = input.nextInt();
-            }
-            catch (InputMismatchException e){
-                select=-1;
-            }
-            if (select<1 || select>4){
-                System.out.print("Enter number between 1 and 4:\n");
+            else {
+                System.out.println("Enter number between 1 and 4");
                 continue;
             }
-            Table table = null;
+            if (select < 1 || select > 4) {
+                System.out.println("Enter number between 1 and 4:");
+                continue;
+            }
+            Criterion criterion = null;
+            DailyRecordDao dailyRecordDao =DailyRecordDao.getInstance();
             switch (select) {
                 case 1: {
                     TaskEntity task = new TaskController().selectTask();
-                    table = new Table(new DailyRecordDao().getRecordsList(task));
+                    criterion = restrictContent(task);
                     break;
                 }
                 case 2: {
                     TaskEntity task = new TaskController().selectTask();
-                    List<TaskEntity> tasks = new TaskDao().getSubTasks(task.getId());
-                    table = new Table(new DailyRecordDao().getRecordsList(tasks));
+                    List<TaskEntity> tasks =TaskDao.getInstance().getSubTasks(task.getId());
+                    criterion = restrictContent(tasks);
                     break;
                 }
                 case 3:
                     Date date = readDate();
-                    table = new Table(new DailyRecordDao().getRecordsList(date));
+                    criterion = restrictContent(date);
                     break;
                 case 4:
                     Date date1 = readDate();
                     Date date2 = readDate();
-                    table = new Table(new DailyRecordDao().getRecordsList(date1, date2));
+                    criterion = restrictContent(date1, date2);
                     break;
             }
-            selectSort(table);
-            if (table != null)
-                table.print();
+            Order order = selectSort();
+            Table table = new Table(dailyRecordDao.getRecordsList(criterion, order));
+            table.print();
             break;
         }
     }
 
-    private void selectSort(Table table) {
+    private Order selectSort() {
         while (true) {
-            System.out.print("\nSelect sort parameter\n");
-            System.out.print("1. Date\n");
-            System.out.print("2. Task name\n");
-            System.out.print("3. Task length\n");
-            System.out.print("4. Percentage\n");
-            Scanner input = new Scanner(System.in);
+            System.out.println("Select sort parameter");
+            System.out.println("1. Date");
+            System.out.println("2. Task name");
+            System.out.println("3. Task length");
             int select;
-            try {
+            Scanner input = new Scanner(System.in);
+            if (input.hasNextInt())
                 select = input.nextInt();
-            }
-            catch (InputMismatchException e){
-                select=-1;
-            }
-            if (select<1 || select>4){
-                System.out.print("Enter number between 1 and 4:\n");
+            else {
+                System.out.println("Enter number between 1 and 3");
                 continue;
             }
-            Comparator<TableRow> comparator = null;
+            if (select < 1 || select > 3) {
+                System.out.println("Enter number between 1 and 3");
+                continue;
+            }
+            OrderType orderType = selectSortOrder();
+
             switch (select) {
                 case 1:
-                    comparator = new DateComparator();
-                    break;
+                    return orderByAttribute("rDate", orderType);
                 case 2:
-                    comparator = new TaskNameComparator();
-                    break;
+                    return orderByAttribute("task", orderType);
                 case 3:
-                    comparator = new LengthComparator();
-                    break;
-                case 4:
-                    comparator = new PercComparator();
-                    break;
+                    return orderByAttribute("length", orderType);
             }
-            if (comparator != null)
-                table.sort(comparator);
-            selectSortOrder(table);
-            break;
         }
     }
 
-    private void selectSortOrder(Table table){
+    private OrderType selectSortOrder() {
         while (true) {
-            System.out.print("\nSelect sort order\n");
-            System.out.print("1. Ascending\n");
-            System.out.print("2. Descending\n");
-            Scanner input = new Scanner(System.in);
+            System.out.println("Select sort order");
+            System.out.println("1. Ascending");
+            System.out.println("2. Descending");
             int select;
-            try {
+            Scanner input = new Scanner(System.in);
+            if (input.hasNextInt())
                 select = input.nextInt();
+            else {
+                System.out.println("Enter 1 or 2:");
+                continue;
             }
-            catch (InputMismatchException e){
-                select=-1;
+            if (select == 1)
+                return OrderType.ASC;
+            else if (select == 2) {
+                return OrderType.DESC;
             }
-            if (select==1)
-                break;
-            else if (select==2){
-                table.descSort();
-                break;
-            }
-            System.out.print("Enter 1 or 2:\n");
+            System.out.println("Enter 1 or 2:");
         }
     }
 
     public Date readDate() {
-        System.out.print("Enter date in format yyyy/mm/dd\n");
-        SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
-        Scanner input = new Scanner(System.in);
-        String inString = input.next();
-        Date date;
-        try {
-            date = new Date(format.parse(inString).getTime());
-        } catch (ParseException e) {
-            System.out.print("incorrect date format\n");
-            date = readDate();
+        while (true) {
+            System.out.println("Enter date in format yyyy/mm/dd");
+            SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd");
+            Scanner input = new Scanner(System.in);
+            String inString = input.next();
+            Date date;
+            try {
+                date = new Date(format.parse(inString).getTime());
+            } catch (ParseException e) {
+                System.out.println("incorrect date format");
+                continue;
+            }
+            return date;
         }
-        return date;
     }
 }

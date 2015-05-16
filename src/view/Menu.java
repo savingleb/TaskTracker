@@ -1,8 +1,9 @@
-package controller;
+package view;
 
-import view.Tree;
+import controller.CurrentTask;
+import controller.RecordController;
+import controller.TaskController;
 
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Menu {
@@ -18,27 +19,26 @@ public class Menu {
     }
 
     public void printMenu() {
-            System.out.print("\n1. Print task tree\n");
-            System.out.print("2. Add task\n");
-            System.out.print("3. Delete task\n");
-            System.out.print("4. Rename task\n");
-            System.out.print("5. Print statistic\n");
-            System.out.print("6. Print Current task\n");
-            System.out.print("7. Change current task\n");
-            System.out.print("8. Exit\n");
-
+        while (true) {
+            System.out.println("\n1. Print task tree");
+            System.out.println("2. Add task");
+            System.out.println("3. Delete task");
+            System.out.println("4. Rename task");
+            System.out.println("5. Print statistic");
+            System.out.println("6. Print Current task");
+            System.out.println("7. Change current task");
+            System.out.println("8. Exit");
             Scanner input = new Scanner(System.in);
-        int select;
-        try {
-            select = input.nextInt();
-        }
-        catch (InputMismatchException e){
-            select=0;
-        }
-
+            int select;
+            if (input.hasNextInt())
+                select = input.nextInt();
+            else {
+                System.out.println("Enter number between 1 and 8");
+                continue;
+            }
             if (select < 1 || select > 8) {
-                System.out.print("Enter number between 1 and 8");
-                this.printMenu();
+                System.out.println("Enter number between 1 and 8");
+                continue;
             }
             Tree tree = new Tree();
             switch (select) {
@@ -67,6 +67,6 @@ public class Menu {
                     CurrentTask.getInstance().saveTaskTime();
                     System.exit(1);
             }
-            this.printMenu();
+        }
     }
 }

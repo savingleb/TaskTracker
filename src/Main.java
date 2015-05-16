@@ -1,5 +1,5 @@
 import controller.CurrentTask;
-import controller.Menu;
+import view.Menu;
 
 
 public class Main {

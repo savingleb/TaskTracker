@@ -1,14 +1,17 @@
 package db;
 
 import javax.persistence.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+
+@NamedNativeQueries({
+        @NamedNativeQuery(name = "AddTask", query = "call ADD_TASK(:parentId, :name)"),
+        @NamedNativeQuery(name="DeleteTask", query="call DELETE_TASK(:id)")
+})
 @Entity
 @Table(name = "TASK", schema = "TDEV", catalog = "")
-public class TaskEntity {
+public class TaskEntity implements Comparable{
     private int id;
     private int tLevel;
     private int leftKey;
@@ -82,6 +85,8 @@ public class TaskEntity {
         return true;
     }
 
+
+
     @Override
     public int hashCode() {
         int result = id;
@@ -99,5 +104,12 @@ public class TaskEntity {
 
     public void setRecords(Set<DailyRecordEntity> records) {
         this.records = records;
+    }
+
+
+    @Override
+    public int compareTo(Object o) {
+        TaskEntity task=(TaskEntity)o;
+        return  (-1)*this.getName().compareTo(task.getName());
     }
 }

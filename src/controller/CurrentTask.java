@@ -12,12 +12,12 @@ import java.util.GregorianCalendar;
 //singleton
 public class CurrentTask {
     private static CurrentTask instance;
-    TaskEntity task;
-    GregorianCalendar startTime;
+    private TaskEntity task;
+    private GregorianCalendar startTime;
     final long TIME_ZONE_DIF=10800000;
 
     private CurrentTask(){
-        TaskDao dao=new TaskDao();
+        TaskDao dao=TaskDao.getInstance();
         task=dao.getTaskById(dao.NOT_WORK_ID);
         startTime=new GregorianCalendar();
     }
@@ -28,8 +28,8 @@ public class CurrentTask {
         return instance;
     }
 
-    void saveTaskTime(){
-        DailyRecordDao recordDao=new DailyRecordDao();
+    public void saveTaskTime(){
+        DailyRecordDao recordDao=DailyRecordDao.getInstance();
         Calendar currentTime=Calendar.getInstance();
         long length=Calendar.getInstance().getTimeInMillis() - startTime.getTimeInMillis();
         recordDao.applyRecord(length, task);
@@ -37,20 +37,25 @@ public class CurrentTask {
         startTime.setTimeInMillis(currentTime.getTimeInMillis());
     }
 
-    void changeTask(){
+    public void changeTask(){
         this.saveTaskTime();
         TaskController controller=new TaskController();
         System.out.print("Select new current task\n");
-        task=controller.selectTask();
+        TaskEntity newTask=controller.selectTask();
+        TaskDao taskDao=TaskDao.getInstance();
+        if (task.getId() == taskDao.ROOT_ID || task.getId() == taskDao.NOT_WORK_ID) {
+            System.out.println("Can't rename default task");
+        }
+        task=newTask;
         startTime=new GregorianCalendar();
     }
 
-    void printCurrentTask(){
-        System.out.print("\nCurrent task: " + task.getName());
+    public void printCurrentTask(){
+        System.out.println("Current task: " + task.getName());
         SimpleDateFormat dateFormat=new SimpleDateFormat("HH:mm:ss");
-        System.out.print("\nStarted: " + dateFormat.format(new Date(startTime.getTimeInMillis())));
+        System.out.println("Started: " + dateFormat.format(new Date(startTime.getTimeInMillis())));
         GregorianCalendar current=new GregorianCalendar();
         Date last=new Date(current.getTimeInMillis() - startTime.getTimeInMillis() - TIME_ZONE_DIF);
-        System.out.print("\nLast: "+dateFormat.format(last));
+        System.out.println("Last: "+dateFormat.format(last));
     }
 }
